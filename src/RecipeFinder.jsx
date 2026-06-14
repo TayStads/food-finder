@@ -39,6 +39,11 @@ const RECIPES = [
   {
     id: 1, name: 'Veggie omelette', emoji: '🍳',
     ingredients: ['eggs', 'milk', 'onion', 'bell pepper', 'cheddar cheese', 'butter', 'salt', 'pepper'],
+    measurements: {
+      eggs: '4 eggs', milk: '2 tbsp / 30 ml milk', onion: '½ cup chopped / 50 g onion',
+      'bell pepper': '½ cup chopped / 60 g bell pepper', 'cheddar cheese': '½ cup grated / 50 g cheddar cheese',
+      butter: '2 tsp / 10 g butter', salt: '½ tsp / 2 g salt', pepper: '¼ tsp / 1 g pepper',
+    },
     steps: [
       'Whisk the eggs with the milk, salt and pepper.',
       'Sauté the onion and bell pepper in butter until soft.',
@@ -49,6 +54,10 @@ const RECIPES = [
   {
     id: 2, name: 'Garlic butter pasta', emoji: '🍝',
     ingredients: ['pasta', 'butter', 'garlic', 'parmesan', 'parsley', 'salt'],
+    measurements: {
+      pasta: '7 oz / 200 g pasta', butter: '3 tbsp / 40 g butter', garlic: '3 cloves garlic',
+      parmesan: '⅓ cup grated / 30 g parmesan', parsley: '1 tbsp chopped / 5 g parsley', salt: '½ tsp / 2 g salt',
+    },
     steps: [
       'Boil the pasta in salted water until al dente.',
       'Melt the butter and gently sauté the garlic.',
@@ -59,6 +68,11 @@ const RECIPES = [
   {
     id: 3, name: 'Chicken stir fry', emoji: '🥢',
     ingredients: ['chicken breast', 'soy sauce', 'garlic', 'ginger', 'bell pepper', 'rice', 'oil'],
+    measurements: {
+      'chicken breast': '10½ oz / 300 g chicken breast', 'soy sauce': '2 tbsp / 30 ml soy sauce', garlic: '2 cloves garlic',
+      ginger: '2 tsp grated / 10 g ginger', 'bell pepper': '¾ cup sliced / 100 g bell pepper',
+      rice: '¾ cup / 150 g rice', oil: '1 tbsp / 15 ml oil',
+    },
     steps: [
       'Cook the rice and set aside.',
       'Slice the chicken and stir-fry in oil until browned.',
@@ -69,6 +83,10 @@ const RECIPES = [
   {
     id: 4, name: 'Tomato rice', emoji: '🍚',
     ingredients: ['rice', 'tomato', 'onion', 'garlic', 'oil', 'salt'],
+    measurements: {
+      rice: '¾ cup / 150 g rice', tomato: '1¼ cups chopped / 200 g tomato', onion: '⅔ cup chopped / 80 g onion',
+      garlic: '2 cloves garlic', oil: '1 tbsp / 15 ml oil', salt: '½ tsp / 2 g salt',
+    },
     steps: [
       'Sauté the onion and garlic in oil until fragrant.',
       'Add the chopped tomato and cook until it breaks down.',
@@ -79,6 +97,10 @@ const RECIPES = [
   {
     id: 5, name: 'Tuna sandwich', emoji: '🥪',
     ingredients: ['bread', 'tuna', 'mayonnaise', 'lettuce', 'pepper'],
+    measurements: {
+      bread: '2 slices bread', tuna: '1 small can / 100 g tuna', mayonnaise: '4 tsp / 20 g mayonnaise',
+      lettuce: '⅓ cup shredded / 20 g lettuce', pepper: '¼ tsp / 1 g pepper',
+    },
     steps: [
       'Mix the tuna with mayonnaise and pepper.',
       'Layer lettuce and the tuna mix between bread slices.',
@@ -88,6 +110,10 @@ const RECIPES = [
   {
     id: 6, name: 'Bean quesadilla', emoji: '🌮',
     ingredients: ['tortilla', 'beans', 'cheddar cheese', 'salsa'],
+    measurements: {
+      tortilla: '1 (10 in) / 60 g tortilla', beans: '½ cup / 100 g beans',
+      'cheddar cheese': '⅓ cup grated / 40 g cheddar cheese', salsa: '2 tbsp / 30 g salsa',
+    },
     steps: [
       'Spread beans and cheese over a tortilla, fold in half.',
       'Toast in a dry pan until golden and the cheese melts.',
@@ -97,6 +123,10 @@ const RECIPES = [
   {
     id: 7, name: 'Banana pancakes', emoji: '🥞',
     ingredients: ['flour', 'banana', 'eggs', 'milk', 'sugar', 'butter'],
+    measurements: {
+      flour: '1 cup / 120 g flour', banana: '1 medium / 120 g banana', eggs: '2 eggs',
+      milk: '⅔ cup / 150 ml milk', sugar: '1 tbsp / 15 g sugar', butter: '1 tbsp / 15 g butter',
+    },
     steps: [
       'Mash the banana and whisk with eggs, milk and sugar.',
       'Stir in the flour until just combined.',
@@ -106,6 +136,10 @@ const RECIPES = [
   {
     id: 8, name: 'Lentil soup', emoji: '🍲',
     ingredients: ['lentils', 'onion', 'carrot', 'garlic', 'vegetable stock', 'salt'],
+    measurements: {
+      lentils: '1 cup / 200 g lentils', onion: '¾ cup chopped / 100 g onion', carrot: '1 cup chopped / 100 g carrot',
+      garlic: '2 cloves garlic', 'vegetable stock': '4 cups / 1 L vegetable stock', salt: '½ tsp / 3 g salt',
+    },
     steps: [
       'Sauté the onion, carrot and garlic until softened.',
       'Add the lentils and vegetable stock.',
@@ -115,6 +149,9 @@ const RECIPES = [
   {
     id: 9, name: 'Grilled cheese', emoji: '🧀',
     ingredients: ['bread', 'cheddar cheese', 'butter'],
+    measurements: {
+      bread: '2 slices bread', 'cheddar cheese': '½ cup grated / 50 g cheddar cheese', butter: '2 tsp / 10 g butter',
+    },
     steps: [
       'Butter the outside of two bread slices.',
       'Place cheese between the slices.',
@@ -124,6 +161,10 @@ const RECIPES = [
   {
     id: 10, name: 'Chicken caesar salad', emoji: '🥗',
     ingredients: ['chicken breast', 'lettuce', 'parmesan', 'croutons', 'caesar dressing', 'oil'],
+    measurements: {
+      'chicken breast': '9 oz / 250 g chicken breast', lettuce: '2½ cups chopped / 150 g lettuce', parmesan: '⅓ cup grated / 30 g parmesan',
+      croutons: '1 cup / 40 g croutons', 'caesar dressing': '3 tbsp / 40 ml caesar dressing', oil: '2 tsp / 10 ml oil',
+    },
     steps: [
       'Season the chicken and pan-fry in oil until cooked through.',
       'Slice the chicken.',
@@ -134,6 +175,11 @@ const RECIPES = [
   {
     id: 11, name: 'Vegetable curry', emoji: '🍛',
     ingredients: ['potato', 'carrot', 'onion', 'garlic', 'coconut milk', 'curry powder', 'rice', 'oil'],
+    measurements: {
+      potato: '2 cups chopped / 300 g potato', carrot: '1½ cups chopped / 150 g carrot', onion: '¾ cup chopped / 100 g onion',
+      garlic: '2 cloves garlic', 'coconut milk': '1⅔ cups / 400 ml coconut milk', 'curry powder': '1 tbsp / 15 g curry powder',
+      rice: '1 cup / 200 g rice', oil: '1 tbsp / 15 ml oil',
+    },
     steps: [
       'Cook the rice and set aside.',
       'Sauté the onion and garlic in oil, then add curry powder.',
@@ -144,6 +190,10 @@ const RECIPES = [
   {
     id: 12, name: 'Egg fried rice', emoji: '🍳',
     ingredients: ['rice', 'eggs', 'soy sauce', 'onion', 'peas', 'oil'],
+    measurements: {
+      rice: '1½ cups cooked / 300 g rice', eggs: '2 eggs', 'soy sauce': '2 tbsp / 30 ml soy sauce',
+      onion: '⅓ cup chopped / 50 g onion', peas: '½ cup / 80 g peas', oil: '1 tbsp / 15 ml oil',
+    },
     steps: [
       'Scramble the eggs in a little oil and set aside.',
       'Sauté the onion and peas.',
@@ -154,6 +204,10 @@ const RECIPES = [
   {
     id: 13, name: 'Pasta aglio e olio', emoji: '🧄',
     ingredients: ['pasta', 'garlic', 'oil', 'chili flakes', 'parsley', 'salt'],
+    measurements: {
+      pasta: '7 oz / 200 g pasta', garlic: '4 cloves garlic', oil: '¼ cup / 60 ml oil',
+      'chili flakes': '½ tsp / 2 g chili flakes', parsley: '1 tbsp chopped / 5 g parsley', salt: '½ tsp / 2 g salt',
+    },
     steps: [
       'Boil the pasta in salted water until al dente.',
       'Gently fry the garlic and chili flakes in oil until fragrant.',
@@ -164,6 +218,9 @@ const RECIPES = [
   {
     id: 14, name: 'Cheese quesadilla', emoji: '🌯',
     ingredients: ['tortilla', 'cheddar cheese'],
+    measurements: {
+      tortilla: '1 (10 in) / 60 g tortilla', 'cheddar cheese': '½ cup grated / 50 g cheddar cheese',
+    },
     steps: [
       'Sprinkle cheese over a tortilla and fold in half.',
       'Toast in a dry pan until the cheese melts and the tortilla is crisp.'
@@ -172,6 +229,10 @@ const RECIPES = [
   {
     id: 15, name: 'Avocado toast', emoji: '🥑',
     ingredients: ['bread', 'avocado', 'lemon', 'salt', 'pepper'],
+    measurements: {
+      bread: '2 slices bread', avocado: '1 medium / 150 g avocado', lemon: '1 tsp juice / 5 ml lemon',
+      salt: '¼ tsp / 1 g salt', pepper: '¼ tsp / 1 g pepper',
+    },
     steps: [
       'Toast the bread.',
       'Mash the avocado with a squeeze of lemon, salt and pepper.',
@@ -453,7 +514,7 @@ export default function RecipeFinder() {
                         {r.ingredients.map((ing, idx) => (
                           <li key={idx} className={`flex items-center gap-2 ${isAvailable(ing) ? '' : 'text-stone-400'}`}>
                             <span className={`w-2 h-2 rounded-full ${isAvailable(ing) ? 'bg-black' : 'bg-stone-300'}`} />
-                            {ing}{!isAvailable(ing) && ' (missing)'}
+                            {r.measurements?.[ing] ?? ing}{!isAvailable(ing) && ' (missing)'}
                           </li>
                         ))}
                       </ul>
