@@ -30,21 +30,40 @@ exports.handler = async (event) => {
     return { statusCode: 400, body: 'Invalid signature' };
   }
 
-  const { payment_status, custom_str1: userId, custom_str2: plan } = params;
+  const { payment_status, custom_str1: userId, custom_str2: plan, token } = params;
 
   if (!userId || !plan) return { statusCode: 200, body: 'OK' };
 
   if (payment_status === 'COMPLETE') {
+    const periodEndsAt = new Date();
+    if (plan === 'monthly') periodEndsAt.setMonth(periodEndsAt.getMonth() + 1);
+    else if (plan === 'annual') periodEndsAt.setFullYear(periodEndsAt.getFullYear() + 1);
+
     await supabase
       .from('users')
-      .update({ tier: plan, status: 'active', trial_ends_at: null })
+      .update({
+        tier: plan,
+        status: 'active',
+        trial_ends_at: null,
+        payfast_token: token || null,
+        period_ends_at: periodEndsAt.toISOString(),
+      })
       .eq('id', userId);
   }
 
-  if (payment_status === 'CANCELLED' || payment_status === 'FAILED') {
+  // CANCELLED = deliberate cancellation; access continues until period_ends_at (already set)
+  if (payment_status === 'CANCELLED') {
     await supabase
       .from('users')
-      .update({ tier: 'free', status: 'free', trial_ends_at: null })
+      .update({ status: 'cancelled' })
+      .eq('id', userId);
+  }
+
+  // FAILED = payment declined; downgrade immediately
+  if (payment_status === 'FAILED') {
+    await supabase
+      .from('users')
+      .update({ tier: 'free', status: 'free', trial_ends_at: null, period_ends_at: null })
       .eq('id', userId);
   }
 

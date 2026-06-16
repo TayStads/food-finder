@@ -25,10 +25,12 @@ export default function ManageAccount({ user, userRecord, onClose, onSignOut, on
   const [deleteConfirm, setDeleteConfirm] = useState('');
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState({ text: '', type: '' });
+  const [localRecord, setLocalRecord] = useState(userRecord);
 
-  const tier = userRecord?.tier || 'free';
-  const status = userRecord?.status || 'free';
-  const trialEndsAt = userRecord?.trial_ends_at;
+  const tier = localRecord?.tier || 'free';
+  const status = localRecord?.status || 'free';
+  const trialEndsAt = localRecord?.trial_ends_at;
+  const periodEndsAt = localRecord?.period_ends_at;
 
   const flash = (text, type = 'success') => {
     setMsg({ text, type });
@@ -58,12 +60,33 @@ export default function ManageAccount({ user, userRecord, onClose, onSignOut, on
   };
 
   const cancelSubscription = async () => {
-    if (!window.confirm('Cancel your subscription? You will keep access until the end of your current billing period.')) return;
+    const endDate = periodEndsAt
+      ? new Date(periodEndsAt).toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' })
+      : 'the end of your current billing period';
+    const planNote = tier === 'annual'
+      ? 'Your annual plan is a once-off payment — no further charges were scheduled.'
+      : 'Future monthly charges will be stopped.';
+    if (!window.confirm(`Cancel your ${TIER_LABELS[tier] || ''} subscription?\n\n${planNote} Your access continues until ${endDate}.`)) return;
+
     setLoading(true);
-    const { error } = await supabase.from('users').update({ status: 'cancelled' }).eq('id', user.id);
-    setLoading(false);
-    if (error) flash(error.message, 'error');
-    else flash('Subscription cancelled. Your access continues until your billing period ends.');
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch('/.netlify/functions/cancel-subscription', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${session.access_token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        flash(data.error || 'Cancellation failed. Please contact support.', 'error');
+      } else {
+        setLocalRecord(prev => ({ ...prev, status: 'cancelled', period_ends_at: data.periodEndsAt }));
+        flash('Subscription cancelled. Your access continues until the end of your billing period.');
+      }
+    } catch {
+      flash('Something went wrong. Please contact support@pantrytoplate.co.za.', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const deleteAccount = async () => {
@@ -90,7 +113,12 @@ export default function ManageAccount({ user, userRecord, onClose, onSignOut, on
       color: 'text-blue-600',
     };
     if (status === 'active') return { text: 'Active', color: 'text-green-600' };
-    if (status === 'cancelled') return { text: 'Cancelled — access until end of period', color: 'text-stone-400' };
+    if (status === 'cancelled') return {
+      text: periodEndsAt
+        ? `Cancelled — access until ${new Date(periodEndsAt).toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' })}`
+        : 'Cancelled — access until end of period',
+      color: 'text-stone-400',
+    };
     return { text: 'Free plan', color: 'text-stone-400' };
   };
 

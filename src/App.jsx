@@ -31,9 +31,11 @@ export default function App() {
       .eq('id', session.user.id)
       .maybeSingle()
       .then(({ data }) => {
-        const expired = data?.status === 'trial' && data.trial_ends_at && new Date(data.trial_ends_at) < new Date();
+        const now = new Date();
+        const expired = data?.status === 'trial' && data.trial_ends_at && new Date(data.trial_ends_at) < now;
+        const periodExpired = data?.status === 'cancelled' && data.period_ends_at && new Date(data.period_ends_at) < now;
         setUserRecord(data ?? null);
-        if (!data || expired) {
+        if (!data || expired || periodExpired) {
           setTrialExpired(!!expired);
           setShowPricing(true);
         }
