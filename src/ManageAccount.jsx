@@ -74,7 +74,7 @@ export default function ManageAccount({ user, subscription, onClose, onSignOut, 
       if (!res.ok) throw new Error();
       onSignOut();
     } catch {
-      flash('Failed to delete account. Please contact support@foodfinder.app.', 'error');
+      flash('Failed to delete account. Please contact support@pantrytoplate.co.za.', 'error');
       setLoading(false);
     }
   };

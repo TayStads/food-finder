@@ -57,7 +57,7 @@ exports.handler = async (event) => {
     email_address: email,
     m_payment_id: `${userId}-${plan}-${Date.now()}`,
     amount: config.amount,
-    item_name: `Food Finder ${config.name}`,
+    item_name: `Pantry to Plate ${config.name}`,
     custom_str1: userId,
     custom_str2: plan,
   };

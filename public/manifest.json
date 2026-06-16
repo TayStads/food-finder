@@ -1,6 +1,6 @@
 {
-  "name": "Food Finder",
-  "short_name": "Food Finder",
+  "name": "Pantry to Plate",
+  "short_name": "Pantry to Plate",
   "description": "Add what's in your kitchen and discover what to make",
   "start_url": "/",
   "display": "standalone",

@@ -56,7 +56,7 @@ export default function Auth() {
     <div className="min-h-screen bg-white flex items-center justify-center p-6">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="text-xs font-semibold tracking-widest text-yellow-600 uppercase mb-2">Food Finder</div>
+          <div className="text-xs font-semibold tracking-widest text-yellow-600 uppercase mb-2">Pantry to Plate</div>
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-yellow-400 text-stone-800 mb-3">
             <ChefHat size={24} />
           </div>

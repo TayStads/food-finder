@@ -142,14 +142,14 @@ export default function Pricing({ user, onPlanSelected, trialExpired }) {
     <div className="min-h-screen bg-stone-50 py-12 px-4">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-10">
-          <div className="text-xs font-semibold tracking-widest text-yellow-600 uppercase mb-2">Food Finder</div>
+          <div className="text-xs font-semibold tracking-widest text-yellow-600 uppercase mb-2">Pantry to Plate</div>
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-yellow-400 text-stone-800 mb-3">
             <ChefHat size={24} />
           </div>
           <h1 className="text-3xl font-serif font-bold text-stone-800">Choose your plan</h1>
           {trialExpired ? (
             <p className="text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mt-4 text-sm max-w-md mx-auto">
-              Your 7-day free trial has ended. Choose a plan below to continue using Food Finder.
+              Your 7-day free trial has ended. Choose a plan below to continue using Pantry to Plate.
             </p>
           ) : (
             <p className="text-stone-500 mt-2 text-sm">Paid plans include a 7-day free trial. No payment required to start.</p>
