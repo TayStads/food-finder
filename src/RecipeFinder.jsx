@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, X, ChevronDown, ChevronUp, ChefHat, EyeOff, Eye, Trash2 } from 'lucide-react';
+import { supabase } from './supabaseClient';
 
 const STAPLES = ['salt', 'pepper', 'oil', 'butter'];
 
@@ -241,7 +242,7 @@ const RECIPES = [
   },
 ];
 
-export default function RecipeFinder() {
+export default function RecipeFinder({ user, onSignOut }) {
   const [ingredients, setIngredients] = useState([]);
   const [input, setInput] = useState('');
   const [hasStaples, setHasStaples] = useState(true);
@@ -256,15 +257,14 @@ export default function RecipeFinder() {
   const [newSteps, setNewSteps] = useState('');
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('custom-recipes');
-      if (saved) {
-        setCustomRecipes(JSON.parse(saved));
-      }
-    } catch {
-      // no saved recipes yet, or storage unavailable
-    }
-  }, []);
+    supabase
+      .from('custom_recipes')
+      .select('*')
+      .order('created_at', { ascending: true })
+      .then(({ data, error }) => {
+        if (!error && data) setCustomRecipes(data.map(r => ({ ...r, custom: true })));
+      });
+  }, [user]);
 
   const addIngredient = (raw) => {
     const name = raw.trim().toLowerCase();
@@ -283,28 +283,19 @@ export default function RecipeFinder() {
     setExpanded(prev => (prev === id ? null : prev));
   };
 
-  const saveRecipe = () => {
+  const saveRecipe = async () => {
     const name = newName.trim();
     const ings = newIngredients.split(',').map(cleanIngredient).filter(Boolean);
     const steps = newSteps.split('\n').map(s => s.trim()).filter(Boolean);
     if (!name || ings.length === 0 || steps.length === 0) return;
 
-    const recipe = {
-      id: `custom-${Date.now()}`,
-      name,
-      emoji: newEmoji.trim() || '🍽️',
-      ingredients: ings,
-      steps,
-      custom: true,
-    };
+    const { data, error } = await supabase
+      .from('custom_recipes')
+      .insert({ user_id: user.id, name, emoji: newEmoji.trim() || '🍽️', ingredients: ings, steps })
+      .select()
+      .single();
 
-    const updated = [...customRecipes, recipe];
-    setCustomRecipes(updated);
-    try {
-      localStorage.setItem('custom-recipes', JSON.stringify(updated));
-    } catch {
-      // saving failed, but the recipe still works for this session
-    }
+    if (!error && data) setCustomRecipes(prev => [...prev, { ...data, custom: true }]);
 
     setNewName('');
     setNewEmoji('🍽️');
@@ -313,15 +304,10 @@ export default function RecipeFinder() {
     setShowAddForm(false);
   };
 
-  const deleteRecipe = (id) => {
-    const updated = customRecipes.filter(r => r.id !== id);
-    setCustomRecipes(updated);
+  const deleteRecipe = async (id) => {
+    await supabase.from('custom_recipes').delete().eq('id', id);
+    setCustomRecipes(prev => prev.filter(r => r.id !== id));
     setExpanded(prev => (prev === id ? null : prev));
-    try {
-      localStorage.setItem('custom-recipes', JSON.stringify(updated));
-    } catch {
-      // saving failed, but the recipe is still removed for this session
-    }
   };
 
   const isAvailable = (ing) => ingredients.includes(ing) || (hasStaples && STAPLES.includes(ing));
@@ -362,7 +348,13 @@ export default function RecipeFinder() {
 
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white min-h-screen">
-      <div className="text-center mb-6">
+      <div className="text-center mb-6 relative">
+        <button
+          onClick={onSignOut}
+          className="absolute right-0 top-0 text-xs text-stone-400 hover:text-stone-600"
+        >
+          Sign out
+        </button>
         <div className="text-xs font-semibold tracking-widest text-yellow-600 uppercase mb-2">Food Finder</div>
         <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-yellow-400 text-stone-800 mb-3">
           <ChefHat size={24} />
