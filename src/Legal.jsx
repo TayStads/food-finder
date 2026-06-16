@@ -16,14 +16,14 @@ You must provide accurate information when registering. You are responsible for 
 
 4. SUBSCRIPTION PLANS AND BILLING
 Pantry to Plate offers the following plans:
-- Free: Access to all 15 built-in recipes. No payment required.
-- 6-Month Plan: R50/month, billed monthly for 6 months (R300 total). Includes up to 10 personal recipes and full feature access.
-- 12-Month Plan: R30/month, billed monthly for 12 months (R360 total). Includes unlimited personal recipes and full feature access.
-- Annual Plan: R250 billed once per year. Includes unlimited personal recipes and full feature access. Saves 31% versus the 12-Month Plan.
+- Free: Access to all 15 built-in recipes, ingredient matching, and step-by-step guides. No custom recipe features.
+- Monthly Plan: R45/month, billed monthly until cancelled. Includes full feature access and unlimited personal recipes.
+- Annual Plan: R399 billed once per year. Includes full feature access and unlimited personal recipes. Saves 26% versus the Monthly Plan.
+- Beta: Complimentary full access granted to selected testers by the Pantry to Plate team. Not available for self-registration.
 
-Paid plans include a 7-day free trial. No payment is required during the trial period. If you do not activate a paid plan before your trial ends, access to paid features will be suspended until payment is completed.
+Paid plans (Monthly and Annual) include a 7-day free trial. No payment is required during the trial period. If you do not activate a paid plan before your trial ends, access to paid features will be suspended until payment is completed.
 
-All payments are processed securely by PayFast. By subscribing to a paid plan, you authorise Pantry to Plate to charge your chosen payment method on a recurring basis (where applicable) for the selected billing period.
+All payments are processed securely by PayFast. By subscribing to a paid plan, you authorise Pantry to Plate to charge your chosen payment method on a recurring basis (where applicable).
 
 5. CANCELLATION AND REFUNDS
 You may cancel a recurring subscription at any time via the "Manage Account" section. Cancellation takes effect at the end of the current billing period. No partial refunds are issued for unused portions of a billing period. Once-off Annual Plan payments are non-refundable after 7 days from the date of purchase.

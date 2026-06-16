@@ -7,37 +7,32 @@ import ManageAccount from './ManageAccount';
 
 export default function App() {
   const [session, setSession] = useState(undefined);
-  const [subscription, setSubscription] = useState(undefined);
+  const [userRecord, setUserRecord] = useState(undefined);
   const [showPricing, setShowPricing] = useState(false);
   const [showAccount, setShowAccount] = useState(false);
   const [trialExpired, setTrialExpired] = useState(false);
 
-  // Handle PayFast return URL
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('payment') === 'success') {
-      window.history.replaceState({}, '', '/');
-    }
+    if (params.get('payment') === 'success') window.history.replaceState({}, '', '/');
   }, []);
 
-  // Auth state
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session ?? null));
-    const { data: { subscription: sub } } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
-    return () => sub.unsubscribe();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
+    return () => subscription.unsubscribe();
   }, []);
 
-  // Fetch subscription whenever session changes
   useEffect(() => {
-    if (!session) { setSubscription(null); return; }
+    if (!session) { setUserRecord(null); return; }
     supabase
-      .from('subscriptions')
+      .from('users')
       .select('*')
-      .eq('user_id', session.user.id)
+      .eq('id', session.user.id)
       .maybeSingle()
       .then(({ data }) => {
         const expired = data?.status === 'trial' && data.trial_ends_at && new Date(data.trial_ends_at) < new Date();
-        setSubscription(data ?? null);
+        setUserRecord(data ?? null);
         if (!data || expired) {
           setTrialExpired(!!expired);
           setShowPricing(true);
@@ -47,12 +42,8 @@ export default function App() {
 
   const handlePlanSelected = async () => {
     if (!session) return;
-    const { data } = await supabase
-      .from('subscriptions')
-      .select('*')
-      .eq('user_id', session.user.id)
-      .maybeSingle();
-    setSubscription(data);
+    const { data } = await supabase.from('users').select('*').eq('id', session.user.id).maybeSingle();
+    setUserRecord(data);
     setShowPricing(false);
     setTrialExpired(false);
   };
@@ -62,8 +53,7 @@ export default function App() {
     supabase.auth.signOut();
   };
 
-  // Loading — waiting for session check
-  if (session === undefined || (session && subscription === undefined)) {
+  if (session === undefined || (session && userRecord === undefined)) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="w-8 h-8 rounded-full border-4 border-yellow-400 border-t-transparent animate-spin" />
@@ -74,14 +64,21 @@ export default function App() {
   if (!session) return <Auth />;
 
   if (showPricing) {
-    return <Pricing user={session.user} onPlanSelected={handlePlanSelected} trialExpired={trialExpired} />;
+    return (
+      <Pricing
+        user={session.user}
+        userRecord={userRecord}
+        onPlanSelected={handlePlanSelected}
+        trialExpired={trialExpired}
+      />
+    );
   }
 
   return (
     <>
       <RecipeFinder
         user={session.user}
-        subscription={subscription}
+        tier={userRecord?.tier || 'free'}
         onSignOut={handleSignOut}
         onOpenAccount={() => setShowAccount(true)}
         onUpgrade={() => setShowPricing(true)}
@@ -89,7 +86,7 @@ export default function App() {
       {showAccount && (
         <ManageAccount
           user={session.user}
-          subscription={subscription}
+          userRecord={userRecord}
           onClose={() => setShowAccount(false)}
           onSignOut={handleSignOut}
           onUpgrade={() => { setShowAccount(false); setShowPricing(true); }}

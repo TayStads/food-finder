@@ -9,14 +9,14 @@ const TABS = [
   { id: 'danger', label: 'Delete account', Icon: Trash2 },
 ];
 
-const PLAN_LABELS = {
+const TIER_LABELS = {
   free: 'Free',
-  '6month': '6-Month (R50/month)',
-  '12month': '12-Month (R30/month)',
-  annual: 'Annual (R250/year)',
+  monthly: 'Monthly (R45/month)',
+  annual: 'Annual (R399/year)',
+  beta: 'Beta',
 };
 
-export default function ManageAccount({ user, subscription, onClose, onSignOut, onUpgrade }) {
+export default function ManageAccount({ user, userRecord, onClose, onSignOut, onUpgrade }) {
   const [tab, setTab] = useState('details');
   const [name, setName] = useState(user?.user_metadata?.full_name || '');
   const [email, setEmail] = useState(user?.email || '');
@@ -25,6 +25,10 @@ export default function ManageAccount({ user, subscription, onClose, onSignOut, 
   const [deleteConfirm, setDeleteConfirm] = useState('');
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState({ text: '', type: '' });
+
+  const tier = userRecord?.tier || 'free';
+  const status = userRecord?.status || 'free';
+  const trialEndsAt = userRecord?.trial_ends_at;
 
   const flash = (text, type = 'success') => {
     setMsg({ text, type });
@@ -54,12 +58,12 @@ export default function ManageAccount({ user, subscription, onClose, onSignOut, 
   };
 
   const cancelSubscription = async () => {
-    if (!window.confirm('Cancel your subscription? You will keep access until the end of your billing period.')) return;
+    if (!window.confirm('Cancel your subscription? You will keep access until the end of your current billing period.')) return;
     setLoading(true);
-    const { error } = await supabase.from('subscriptions').update({ status: 'cancelled' }).eq('user_id', user.id);
+    const { error } = await supabase.from('users').update({ status: 'cancelled' }).eq('id', user.id);
     setLoading(false);
     if (error) flash(error.message, 'error');
-    else flash('Subscription cancelled. Access continues until your billing period ends.');
+    else flash('Subscription cancelled. Your access continues until your billing period ends.');
   };
 
   const deleteAccount = async () => {
@@ -78,6 +82,19 @@ export default function ManageAccount({ user, subscription, onClose, onSignOut, 
       setLoading(false);
     }
   };
+
+  const statusBadge = () => {
+    if (tier === 'beta') return { text: 'Complimentary beta access', color: 'text-purple-600' };
+    if (status === 'trial') return {
+      text: `Free trial — ends ${new Date(trialEndsAt).toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' })}`,
+      color: 'text-blue-600',
+    };
+    if (status === 'active') return { text: 'Active', color: 'text-green-600' };
+    if (status === 'cancelled') return { text: 'Cancelled — access until end of period', color: 'text-stone-400' };
+    return { text: 'Free plan', color: 'text-stone-400' };
+  };
+
+  const { text: statusText, color: statusColor } = statusBadge();
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex justify-end" onClick={e => e.target === e.currentTarget && onClose()}>
@@ -153,32 +170,41 @@ export default function ManageAccount({ user, subscription, onClose, onSignOut, 
             <div className="space-y-4">
               <div className="bg-stone-50 rounded-xl p-4 border border-stone-100">
                 <div className="text-xs font-medium text-stone-400 uppercase tracking-wide mb-1">Current plan</div>
-                <div className="font-serif font-bold text-stone-800 text-xl">{PLAN_LABELS[subscription?.plan] ?? 'Free'}</div>
-                {subscription?.status === 'trial' ? (
-                  <div className="text-xs mt-1 font-medium text-blue-600">
-                    Free trial active — ends {new Date(subscription.trial_ends_at).toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' })}
-                  </div>
-                ) : (
-                  <div className={`text-xs mt-1 font-medium ${subscription?.status === 'active' ? 'text-green-600' : 'text-stone-400'}`}>
-                    {subscription?.status === 'cancelled' ? 'Cancelled — access until end of period' : 'Active'}
-                  </div>
-                )}
+                <div className="font-serif font-bold text-stone-800 text-xl">{TIER_LABELS[tier] ?? 'Free'}</div>
+                <div className={`text-xs mt-1 font-medium ${statusColor}`}>{statusText}</div>
               </div>
-              {subscription?.plan === 'free' ? (
+
+              {tier === 'free' && (
                 <button onClick={onUpgrade}
                   className="w-full py-2 rounded-lg bg-yellow-400 text-stone-800 font-medium hover:bg-yellow-500">
                   Upgrade plan
                 </button>
-              ) : subscription?.status === 'trial' ? (
+              )}
+
+              {status === 'trial' && (
                 <button onClick={onUpgrade}
                   className="w-full py-2 rounded-lg bg-yellow-400 text-stone-800 font-medium hover:bg-yellow-500">
-                  Complete payment to activate plan
+                  Activate plan early
                 </button>
-              ) : (
-                <button onClick={cancelSubscription} disabled={loading || subscription?.status === 'cancelled'}
+              )}
+
+              {(tier === 'monthly' || tier === 'annual') && status === 'active' && (
+                <button onClick={cancelSubscription} disabled={loading}
                   className="w-full py-2 rounded-lg border border-stone-200 text-stone-500 text-sm hover:border-red-200 hover:text-red-500 disabled:opacity-40 transition-colors">
-                  {subscription?.status === 'cancelled' ? 'Subscription already cancelled' : 'Cancel subscription'}
+                  {loading ? 'Cancelling…' : 'Cancel subscription'}
                 </button>
+              )}
+
+              {status === 'cancelled' && (
+                <p className="text-xs text-center text-stone-400">
+                  Your subscription has been cancelled. Access continues until your billing period ends.
+                </p>
+              )}
+
+              {tier === 'beta' && (
+                <p className="text-xs text-center text-stone-400">
+                  Beta access is complimentary and assigned by the Pantry to Plate team.
+                </p>
               )}
             </div>
           )}

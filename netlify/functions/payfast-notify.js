@@ -13,7 +13,6 @@ function validateSignature(params, passphrase) {
     .filter(k => rest[k] !== '' && rest[k] != null)
     .map(k => `${k}=${encodeURIComponent(String(rest[k])).replace(/%20/g, '+')}`)
     .join('&');
-
   const toHash = passphrase ? `${pfString}&passphrase=${encodeURIComponent(passphrase).replace(/%20/g, '+')}` : pfString;
   return crypto.createHash('md5').update(toHash).digest('hex') === signature;
 }
@@ -31,19 +30,22 @@ exports.handler = async (event) => {
     return { statusCode: 400, body: 'Invalid signature' };
   }
 
-  const { payment_status, custom_str1: userId, custom_str2: plan, token } = params;
+  const { payment_status, custom_str1: userId, custom_str2: plan } = params;
 
-  if (payment_status === 'COMPLETE' && userId && plan) {
-    const now = new Date();
-    let expiresAt = null;
-    if (plan === '6month') expiresAt = new Date(now.setMonth(now.getMonth() + 6)).toISOString();
-    else if (plan === '12month') expiresAt = new Date(now.setMonth(now.getMonth() + 12)).toISOString();
-    else if (plan === 'annual') expiresAt = new Date(now.setFullYear(now.getFullYear() + 1)).toISOString();
+  if (!userId || !plan) return { statusCode: 200, body: 'OK' };
 
-    await supabase.from('subscriptions').upsert(
-      { user_id: userId, plan, status: 'active', payfast_token: token || null, expires_at: expiresAt },
-      { onConflict: 'user_id' }
-    );
+  if (payment_status === 'COMPLETE') {
+    await supabase
+      .from('users')
+      .update({ tier: plan, status: 'active', trial_ends_at: null })
+      .eq('id', userId);
+  }
+
+  if (payment_status === 'CANCELLED' || payment_status === 'FAILED') {
+    await supabase
+      .from('users')
+      .update({ tier: 'free', status: 'free', trial_ends_at: null })
+      .eq('id', userId);
   }
 
   return { statusCode: 200, body: 'OK' };

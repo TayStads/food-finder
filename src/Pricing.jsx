@@ -18,29 +18,11 @@ const PLANS = [
     highlight: false,
   },
   {
-    id: '6month',
-    name: '6-Month',
-    price: 'R50',
+    id: 'monthly',
+    name: 'Monthly',
+    price: 'R45',
     period: '/month',
-    note: 'R300 total · 6 monthly payments',
-    features: [
-      'All 15 built-in recipes',
-      'Ingredient-based matching',
-      'Step-by-step cooking guide',
-      'Save favourite recipes',
-      'Up to 10 personal recipes',
-      'Shopping list generator',
-      'Recipe categories & tags',
-      'Recipe sharing',
-    ],
-    highlight: false,
-  },
-  {
-    id: '12month',
-    name: '12-Month',
-    price: 'R30',
-    period: '/month',
-    note: 'R360 total · 12 monthly payments',
+    note: 'Cancel anytime',
     features: [
       'All 15 built-in recipes',
       'Ingredient-based matching',
@@ -56,9 +38,9 @@ const PLANS = [
   {
     id: 'annual',
     name: 'Annual',
-    price: 'R250',
+    price: 'R399',
     period: '/year',
-    note: 'Once-off payment · save 31% vs 12-month',
+    note: 'Once-off · save 26% vs monthly',
     features: [
       'All 15 built-in recipes',
       'Ingredient-based matching',
@@ -74,39 +56,42 @@ const PLANS = [
   },
 ];
 
-export default function Pricing({ user, onPlanSelected, trialExpired }) {
+export default function Pricing({ user, userRecord, onPlanSelected, trialExpired }) {
   const [loading, setLoading] = useState(null);
   const [error, setError] = useState('');
+
+  // Show PayFast buttons if: trial has expired, OR user already has/had a trial (avoid resetting trial)
+  const hasExistingTrial = userRecord?.status === 'trial';
+  const showPayNow = trialExpired || hasExistingTrial;
 
   const selectPlan = async (plan) => {
     setLoading(plan.id);
     setError('');
 
     if (plan.id === 'free') {
-      const { error: err } = await supabase
-        .from('subscriptions')
-        .upsert({ user_id: user.id, plan: 'free', status: 'active' }, { onConflict: 'user_id' });
+      const { error: err } = await supabase.from('users').upsert(
+        { id: user.id, email: user.email, tier: 'free', status: 'free', trial_ends_at: null },
+        { onConflict: 'id' }
+      );
       if (err) { setError('Something went wrong. Please try again.'); setLoading(null); return; }
       onPlanSelected();
       return;
     }
 
-    // Start 7-day free trial (first time only)
-    if (!trialExpired) {
+    if (!showPayNow) {
+      // Start 7-day free trial
       const trialEnd = new Date();
       trialEnd.setDate(trialEnd.getDate() + 7);
-      const { error: err } = await supabase
-        .from('subscriptions')
-        .upsert(
-          { user_id: user.id, plan: plan.id, status: 'trial', trial_ends_at: trialEnd.toISOString() },
-          { onConflict: 'user_id' }
-        );
+      const { error: err } = await supabase.from('users').upsert(
+        { id: user.id, email: user.email, tier: plan.id, status: 'trial', trial_ends_at: trialEnd.toISOString() },
+        { onConflict: 'id' }
+      );
       if (err) { setError('Something went wrong. Please try again.'); setLoading(null); return; }
       onPlanSelected();
       return;
     }
 
-    // Trial expired — go to PayFast
+    // Go to PayFast
     try {
       const res = await fetch('/.netlify/functions/create-payment', {
         method: 'POST',
@@ -133,8 +118,8 @@ export default function Pricing({ user, onPlanSelected, trialExpired }) {
 
   const ctaLabel = (plan) => {
     if (loading === plan.id) return 'Please wait…';
-    if (plan.id === 'free') return 'Get started free';
-    if (trialExpired) return `Activate ${plan.name} plan`;
+    if (plan.id === 'free') return 'Continue with free';
+    if (showPayNow) return `Activate ${plan.name} plan`;
     return 'Start 7-day free trial';
   };
 
@@ -151,6 +136,10 @@ export default function Pricing({ user, onPlanSelected, trialExpired }) {
             <p className="text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mt-4 text-sm max-w-md mx-auto">
               Your 7-day free trial has ended. Choose a plan below to continue using Pantry to Plate.
             </p>
+          ) : hasExistingTrial ? (
+            <p className="text-blue-700 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 mt-4 text-sm max-w-md mx-auto">
+              Your trial is active. Activate a plan now to secure your access.
+            </p>
           ) : (
             <p className="text-stone-500 mt-2 text-sm">Paid plans include a 7-day free trial. No payment required to start.</p>
           )}
@@ -158,7 +147,7 @@ export default function Pricing({ user, onPlanSelected, trialExpired }) {
 
         {error && <p className="text-center text-red-500 mb-6 text-sm">{error}</p>}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {PLANS.map(plan => (
             <div
               key={plan.id}
@@ -212,7 +201,7 @@ export default function Pricing({ user, onPlanSelected, trialExpired }) {
         </div>
 
         <p className="text-center text-xs text-stone-400 mt-6">
-          {trialExpired
+          {showPayNow
             ? 'Secure payments processed by PayFast · Cancel anytime'
             : 'Paid plans include a 7-day free trial · Secure payments by PayFast · Cancel anytime'}
         </p>

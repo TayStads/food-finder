@@ -235,7 +235,7 @@ const RECIPES = [
   },
 ];
 
-export default function RecipeFinder({ user, subscription, onSignOut, onOpenAccount, onUpgrade }) {
+export default function RecipeFinder({ user, tier, onSignOut, onOpenAccount, onUpgrade }) {
   const [ingredients, setIngredients] = useState([]);
   const [input, setInput] = useState('');
   const [search, setSearch] = useState('');
@@ -267,13 +267,7 @@ export default function RecipeFinder({ user, subscription, onSignOut, onOpenAcco
   const [legalDoc, setLegalDoc] = useState(null);
   const [shareMsg, setShareMsg] = useState('');
 
-  const isTrialActive = subscription?.status === 'trial' &&
-    subscription.trial_ends_at &&
-    new Date(subscription.trial_ends_at) > new Date();
-  const isPaid = subscription?.plan &&
-    subscription.plan !== 'free' &&
-    (subscription.status === 'active' || isTrialActive);
-  const isAtRecipeLimit = subscription?.plan === '6month' && isPaid && customRecipes.length >= 10;
+  const isPaid = ['monthly', 'annual', 'beta'].includes(tier);
 
   useEffect(() => {
     supabase
@@ -758,21 +752,8 @@ export default function RecipeFinder({ user, subscription, onSignOut, onOpenAcco
             </div>
           ) : (
             <>
-              {subscription?.plan === '6month' && (
-                <div className={`flex items-center justify-between text-xs mb-4 px-3 py-2 rounded-lg ${customRecipes.length >= 10 ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-stone-50 text-stone-500'}`}>
-                  <span>{customRecipes.length}/10 recipes used</span>
-                  {customRecipes.length >= 10 && (
-                    <button onClick={onUpgrade} className="font-semibold underline underline-offset-2">Upgrade for unlimited</button>
-                  )}
-                </div>
-              )}
-
               <div className="mb-4">
-                {isAtRecipeLimit ? (
-                  <div className="w-full flex items-center justify-center gap-1 text-sm px-4 py-2 rounded-lg border border-dashed border-amber-300 text-amber-600 bg-amber-50">
-                    Recipe limit reached — <button onClick={onUpgrade} className="font-semibold underline underline-offset-2">upgrade to add more</button>
-                  </div>
-                ) : !showAddForm ? (
+                {!showAddForm ? (
                   <button
                     onClick={() => setShowAddForm(true)}
                     className="w-full flex items-center justify-center gap-1 text-sm px-4 py-2 rounded-lg border border-dashed border-stone-300 text-stone-500 hover:border-yellow-400 hover:text-yellow-600"
