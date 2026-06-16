@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Plus, X, ChevronDown, ChevronUp, ChefHat, EyeOff, Eye, Trash2 } from 'lucide-react';
+import { Plus, X, ChevronDown, ChevronUp, ChefHat, EyeOff, Eye, Trash2, Share2, Search, Settings } from 'lucide-react';
 import { supabase } from './supabaseClient';
+import Legal from './Legal';
 
 const STAPLES = ['salt', 'pepper', 'oil', 'butter'];
 
@@ -242,9 +243,10 @@ const RECIPES = [
   },
 ];
 
-export default function RecipeFinder({ user, onSignOut }) {
+export default function RecipeFinder({ user, subscription, onSignOut, onOpenAccount, onUpgrade }) {
   const [ingredients, setIngredients] = useState([]);
   const [input, setInput] = useState('');
+  const [search, setSearch] = useState('');
   const [hasStaples, setHasStaples] = useState(true);
   const [expanded, setExpanded] = useState(null);
   const [excluded, setExcluded] = useState([]);
@@ -255,6 +257,9 @@ export default function RecipeFinder({ user, onSignOut }) {
   const [newEmoji, setNewEmoji] = useState('🍽️');
   const [newIngredients, setNewIngredients] = useState('');
   const [newSteps, setNewSteps] = useState('');
+  const [legalDoc, setLegalDoc] = useState(null);
+  const [shareMsg, setShareMsg] = useState('');
+  const isPaid = subscription?.plan && subscription.plan !== 'free' && subscription.status === 'active';
 
   useEffect(() => {
     supabase
@@ -310,6 +315,17 @@ export default function RecipeFinder({ user, onSignOut }) {
     setExpanded(prev => (prev === id ? null : prev));
   };
 
+  const shareRecipe = async (recipe) => {
+    const text = `${recipe.emoji} ${recipe.name}\n\nIngredients:\n${recipe.ingredients.map(i => `• ${i}`).join('\n')}\n\nSteps:\n${recipe.steps.map((s, i) => `${i + 1}. ${s}`).join('\n')}\n\nShared via Food Finder`;
+    if (navigator.share) {
+      await navigator.share({ title: recipe.name, text }).catch(() => {});
+    } else {
+      await navigator.clipboard.writeText(text).catch(() => {});
+      setShareMsg(recipe.id);
+      setTimeout(() => setShareMsg(''), 2000);
+    }
+  };
+
   const isAvailable = (ing) => ingredients.includes(ing) || (hasStaples && STAPLES.includes(ing));
 
   const allRecipes = [...RECIPES, ...customRecipes];
@@ -327,7 +343,9 @@ export default function RecipeFinder({ user, onSignOut }) {
       return a.missing.length - b.missing.length;
     });
 
-  const visible = scored.filter(r => !excluded.includes(r.id));
+  const visible = scored
+    .filter(r => !excluded.includes(r.id))
+    .filter(r => !search || r.name.toLowerCase().includes(search.toLowerCase()) || r.ingredients.some(i => i.toLowerCase().includes(search.toLowerCase())));
   const hidden = allRecipes.filter(r => excluded.includes(r.id));
 
   const ingredientCounts = {};
@@ -347,24 +365,28 @@ export default function RecipeFinder({ user, onSignOut }) {
   const suggestions = allIngredients.filter(s => !ingredients.includes(s)).slice(0, 14);
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white min-h-screen">
+    <div className="max-w-2xl mx-auto p-6 bg-white min-h-screen flex flex-col">
+      {legalDoc && <Legal doc={legalDoc} onClose={() => setLegalDoc(null)} />}
+
       <div className="text-center mb-6 relative">
-        <button
-          onClick={onSignOut}
-          className="absolute right-0 top-0 text-xs text-stone-400 hover:text-stone-600"
-        >
-          Sign out
-        </button>
+        <div className="absolute right-0 top-0 flex items-center gap-3">
+          <button onClick={onOpenAccount} className="flex items-center gap-1 text-xs text-stone-400 hover:text-stone-600">
+            <Settings size={13} /> Manage account
+          </button>
+          <button onClick={onSignOut} className="text-xs text-stone-400 hover:text-stone-600">
+            Sign out
+          </button>
+        </div>
         <div className="text-xs font-semibold tracking-widest text-yellow-600 uppercase mb-2">Food Finder</div>
         <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-yellow-400 text-stone-800 mb-3">
           <ChefHat size={24} />
         </div>
         <h1 className="text-3xl font-serif font-bold text-stone-800">What's for Dinner?</h1>
-          <p className="text-stone-500 mt-1">
-            {user?.user_metadata?.full_name
-              ? `Welcome, ${user.user_metadata.full_name}! Add what's in your kitchen and find out what you can cook.`
-              : "Add what's in your kitchen and find out what you can cook."}
-          </p>
+        <p className="text-stone-500 mt-1">
+          {user?.user_metadata?.full_name
+            ? `Welcome, ${user.user_metadata.full_name}! Add what's in your kitchen and find out what you can cook.`
+            : "Add what's in your kitchen and find out what you can cook."}
+        </p>
       </div>
 
       <div className="flex gap-2 mb-6">
@@ -445,6 +467,23 @@ export default function RecipeFinder({ user, onSignOut }) {
         Assume I always have salt, pepper, oil and butter
       </label>
 
+
+      {ingredients.length > 0 && (
+        <div className="relative mb-4">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search recipes by name or ingredient…"
+            className="w-full pl-9 pr-4 py-2 rounded-lg border border-stone-300 bg-white focus:outline-none focus:ring-2 focus:ring-yellow-400 text-stone-800 text-sm"
+          />
+          {search && (
+            <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
+              <X size={14} />
+            </button>
+          )}
+        </div>
+      )}
 
       {ingredients.length === 0 ? (
         <p className="text-center text-stone-400 italic mt-10">Add a few ingredients to see what you can make.</p>
@@ -559,6 +598,16 @@ export default function RecipeFinder({ user, onSignOut }) {
 
       {view === 'mine' && (
         <>
+          {!isPaid ? (
+            <div className="text-center py-12 px-4">
+              <div className="text-4xl mb-4">🔒</div>
+              <h3 className="font-serif font-bold text-stone-800 text-xl mb-2">Upgrade to unlock your recipe repository</h3>
+              <p className="text-stone-500 text-sm mb-6">Save and manage your own recipes with any paid plan — starting from R20/month.</p>
+              <button onClick={onUpgrade} className="px-6 py-2.5 rounded-xl bg-yellow-400 text-stone-800 font-semibold hover:bg-yellow-500">
+                View plans
+              </button>
+            </div>
+          ) : (
           <div className="mb-6">
             {!showAddForm ? (
               <button
@@ -622,9 +671,7 @@ export default function RecipeFinder({ user, onSignOut }) {
             )}
           </div>
 
-          {customRecipes.length === 0 ? (
-            <p className="text-center text-stone-400 italic mt-10">You haven't added any recipes yet.</p>
-          ) : (
+          {customRecipes.length > 0 && (
             <div className="space-y-3">
               {customRecipes.map(r => {
                 const isOpen = expanded === r.id;
@@ -654,12 +701,21 @@ export default function RecipeFinder({ user, onSignOut }) {
                             {r.steps.map((step, idx) => <li key={idx}>{step}</li>)}
                           </ol>
                         </div>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); deleteRecipe(r.id); }}
-                          className="mt-3 flex items-center gap-1 text-sm text-stone-400 hover:text-stone-700"
-                        >
-                          <Trash2 size={14} /> Remove this recipe
-                        </button>
+                        <div className="mt-3 flex items-center gap-3">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); shareRecipe(r); }}
+                            className="flex items-center gap-1 text-sm text-stone-400 hover:text-stone-700"
+                          >
+                            <Share2 size={14} />
+                            {shareMsg === r.id ? 'Copied!' : 'Share recipe'}
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); deleteRecipe(r.id); }}
+                            className="flex items-center gap-1 text-sm text-stone-400 hover:text-stone-700"
+                          >
+                            <Trash2 size={14} /> Remove
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -667,8 +723,19 @@ export default function RecipeFinder({ user, onSignOut }) {
               })}
             </div>
           )}
+          {customRecipes.length === 0 && isPaid && (
+            <p className="text-center text-stone-400 italic mt-10">You haven't added any recipes yet.</p>
+          )}
+          </div>
+          )}
         </>
       )}
+
+      <footer className="mt-auto pt-10 pb-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-stone-400">
+        <span>© 2026 Food Finder. All rights reserved.</span>
+        <button onClick={() => setLegalDoc('terms')} className="hover:text-stone-600 underline underline-offset-2">Terms &amp; Conditions</button>
+        <button onClick={() => setLegalDoc('privacy')} className="hover:text-stone-600 underline underline-offset-2">Privacy Policy</button>
+      </footer>
     </div>
   );
 }
