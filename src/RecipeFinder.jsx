@@ -360,7 +360,11 @@ export default function RecipeFinder({ user, onSignOut }) {
           <ChefHat size={24} />
         </div>
         <h1 className="text-3xl font-serif font-bold text-stone-800">What's for Dinner?</h1>
-        <p className="text-stone-500 mt-1">Add what's in your kitchen and find out what you can cook.</p>
+          <p className="text-stone-500 mt-1">
+            {user?.user_metadata?.full_name
+              ? `Welcome, ${user.user_metadata.full_name}! Add what's in your kitchen and find out what you can cook.`
+              : "Add what's in your kitchen and find out what you can cook."}
+          </p>
       </div>
 
       <div className="flex gap-2 mb-6">

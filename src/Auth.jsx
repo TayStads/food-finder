@@ -4,6 +4,7 @@ import { supabase } from './supabaseClient';
 
 export default function Auth() {
   const [mode, setMode] = useState('signin');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -20,17 +21,28 @@ export default function Auth() {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) setError(error.message);
     } else {
-      const { error } = await supabase.auth.signUp({ email, password });
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { full_name: name.trim() } },
+      });
       if (error) {
         setError(error.message);
       } else {
         setSuccessMsg('Account created! Check your email for a confirmation link, then sign in.');
         setMode('signin');
+        setName('');
         setPassword('');
       }
     }
 
     setLoading(false);
+  };
+
+  const switchMode = () => {
+    setMode(mode === 'signin' ? 'signup' : 'signin');
+    setError('');
+    setSuccessMsg('');
   };
 
   return (
@@ -48,6 +60,16 @@ export default function Auth() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3">
+          {mode === 'signup' && (
+            <input
+              type="text"
+              required
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder="Your name"
+              className="w-full px-4 py-2 rounded-lg border border-stone-300 bg-white focus:outline-none focus:ring-2 focus:ring-yellow-400 text-stone-800"
+            />
+          )}
           <input
             type="email"
             required
@@ -80,10 +102,7 @@ export default function Auth() {
 
         <p className="text-center text-sm text-stone-500 mt-4">
           {mode === 'signin' ? "Don't have an account? " : 'Already have an account? '}
-          <button
-            onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setError(''); setSuccessMsg(''); }}
-            className="text-yellow-600 font-medium hover:underline"
-          >
+          <button onClick={switchMode} className="text-yellow-600 font-medium hover:underline">
             {mode === 'signin' ? 'Sign up free' : 'Sign in'}
           </button>
         </p>
