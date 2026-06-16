@@ -43,7 +43,7 @@ exports.handler = async (event) => {
   if (!config) return { statusCode: 400, body: 'Invalid plan' };
 
   const sandbox = process.env.PAYFAST_SANDBOX === 'true';
-  const baseUrl = process.env.URL || 'https://taystads-food-finder.netlify.app';
+  const baseUrl = process.env.URL || 'https://pantrytoplate-za.netlify.app';
   const nameParts = (name || '').split(' ');
 
   const params = {
