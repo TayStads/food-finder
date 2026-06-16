@@ -60,7 +60,7 @@ export default function Auth() {
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-yellow-400 text-stone-800 mb-3">
             <ChefHat size={24} />
           </div>
-          <h1 className="text-3xl font-serif font-bold text-stone-800">What's for Dinner?</h1>
+          <h1 className="text-3xl font-serif font-bold text-stone-800">What's Cooking?</h1>
           <p className="text-stone-500 mt-1 text-sm">{subtitle}</p>
         </div>
 

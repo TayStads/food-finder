@@ -10,6 +10,7 @@ export default function App() {
   const [subscription, setSubscription] = useState(undefined);
   const [showPricing, setShowPricing] = useState(false);
   const [showAccount, setShowAccount] = useState(false);
+  const [trialExpired, setTrialExpired] = useState(false);
 
   // Handle PayFast return URL
   useEffect(() => {
@@ -35,14 +36,25 @@ export default function App() {
       .eq('user_id', session.user.id)
       .maybeSingle()
       .then(({ data }) => {
+        const expired = data?.status === 'trial' && data.trial_ends_at && new Date(data.trial_ends_at) < new Date();
         setSubscription(data ?? null);
-        if (!data) setShowPricing(true);
+        if (!data || expired) {
+          setTrialExpired(!!expired);
+          setShowPricing(true);
+        }
       });
   }, [session]);
 
-  const handlePlanSelected = (plan) => {
-    setSubscription({ plan, status: 'active' });
+  const handlePlanSelected = async () => {
+    if (!session) return;
+    const { data } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .maybeSingle();
+    setSubscription(data);
     setShowPricing(false);
+    setTrialExpired(false);
   };
 
   const handleSignOut = () => {
@@ -62,7 +74,7 @@ export default function App() {
   if (!session) return <Auth />;
 
   if (showPricing) {
-    return <Pricing user={session.user} onPlanSelected={handlePlanSelected} />;
+    return <Pricing user={session.user} onPlanSelected={handlePlanSelected} trialExpired={trialExpired} />;
   }
 
   return (

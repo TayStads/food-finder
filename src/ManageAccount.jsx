@@ -11,9 +11,9 @@ const TABS = [
 
 const PLAN_LABELS = {
   free: 'Free',
-  '6month': '6-Month (R35/month)',
-  '12month': '12-Month (R20/month)',
-  annual: 'Annual (R199/year)',
+  '6month': '6-Month (R50/month)',
+  '12month': '12-Month (R30/month)',
+  annual: 'Annual (R250/year)',
 };
 
 export default function ManageAccount({ user, subscription, onClose, onSignOut, onUpgrade }) {
@@ -154,14 +154,25 @@ export default function ManageAccount({ user, subscription, onClose, onSignOut, 
               <div className="bg-stone-50 rounded-xl p-4 border border-stone-100">
                 <div className="text-xs font-medium text-stone-400 uppercase tracking-wide mb-1">Current plan</div>
                 <div className="font-serif font-bold text-stone-800 text-xl">{PLAN_LABELS[subscription?.plan] ?? 'Free'}</div>
-                <div className={`text-xs mt-1 font-medium ${subscription?.status === 'active' ? 'text-green-600' : 'text-stone-400'}`}>
-                  {subscription?.status === 'cancelled' ? 'Cancelled — access until end of period' : 'Active'}
-                </div>
+                {subscription?.status === 'trial' ? (
+                  <div className="text-xs mt-1 font-medium text-blue-600">
+                    Free trial active — ends {new Date(subscription.trial_ends_at).toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  </div>
+                ) : (
+                  <div className={`text-xs mt-1 font-medium ${subscription?.status === 'active' ? 'text-green-600' : 'text-stone-400'}`}>
+                    {subscription?.status === 'cancelled' ? 'Cancelled — access until end of period' : 'Active'}
+                  </div>
+                )}
               </div>
               {subscription?.plan === 'free' ? (
                 <button onClick={onUpgrade}
                   className="w-full py-2 rounded-lg bg-yellow-400 text-stone-800 font-medium hover:bg-yellow-500">
                   Upgrade plan
+                </button>
+              ) : subscription?.status === 'trial' ? (
+                <button onClick={onUpgrade}
+                  className="w-full py-2 rounded-lg bg-yellow-400 text-stone-800 font-medium hover:bg-yellow-500">
+                  Complete payment to activate plan
                 </button>
               ) : (
                 <button onClick={cancelSubscription} disabled={loading || subscription?.status === 'cancelled'}

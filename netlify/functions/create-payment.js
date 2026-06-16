@@ -3,23 +3,23 @@ const crypto = require('crypto');
 const PLAN_CONFIG = {
   '6month': {
     name: '6-Month Plan',
-    amount: '35.00',
-    recurring_amount: '35.00',
+    amount: '50.00',
+    recurring_amount: '50.00',
     frequency: 3,
     cycles: 6,
     subscription_type: 1,
   },
   '12month': {
     name: '12-Month Plan',
-    amount: '20.00',
-    recurring_amount: '20.00',
+    amount: '30.00',
+    recurring_amount: '30.00',
     frequency: 3,
     cycles: 12,
     subscription_type: 1,
   },
   annual: {
     name: 'Annual Plan',
-    amount: '199.00',
+    amount: '250.00',
     subscription_type: 0,
   },
 };

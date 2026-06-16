@@ -1,0 +1,17 @@
+{
+  "name": "Food Finder",
+  "short_name": "Food Finder",
+  "description": "Add what's in your kitchen and discover what to make",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#facc15",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

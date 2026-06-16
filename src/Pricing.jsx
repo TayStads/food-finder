@@ -8,45 +8,73 @@ const PLANS = [
     name: 'Free',
     price: 'R0',
     period: 'forever',
-    features: ['15 built-in recipes', 'Ingredient-based matching', 'Step-by-step cooking guide'],
-    excluded: ['Personal recipe repository', 'Recipe sharing'],
-    cta: 'Get started free',
+    features: [
+      'All 15 built-in recipes',
+      'Ingredient-based matching',
+      'Step-by-step cooking guide',
+      'Save favourite recipes',
+    ],
+    excluded: ['Personal recipe repository', 'Shopping list generator', 'Recipe categories & tags', 'Recipe sharing'],
     highlight: false,
   },
   {
     id: '6month',
     name: '6-Month',
-    price: 'R35',
+    price: 'R50',
     period: '/month',
-    note: 'R210 total · 6 monthly payments',
-    features: ['15 built-in recipes', 'Ingredient-based matching', 'Step-by-step cooking guide', 'Personal recipe repository', 'Recipe sharing'],
-    cta: 'Start 6-month plan',
+    note: 'R300 total · 6 monthly payments',
+    features: [
+      'All 15 built-in recipes',
+      'Ingredient-based matching',
+      'Step-by-step cooking guide',
+      'Save favourite recipes',
+      'Up to 10 personal recipes',
+      'Shopping list generator',
+      'Recipe categories & tags',
+      'Recipe sharing',
+    ],
     highlight: false,
   },
   {
     id: '12month',
     name: '12-Month',
-    price: 'R20',
+    price: 'R30',
     period: '/month',
-    note: 'R240 total · 12 monthly payments',
-    features: ['15 built-in recipes', 'Ingredient-based matching', 'Step-by-step cooking guide', 'Personal recipe repository', 'Recipe sharing'],
-    cta: 'Start 12-month plan',
+    note: 'R360 total · 12 monthly payments',
+    features: [
+      'All 15 built-in recipes',
+      'Ingredient-based matching',
+      'Step-by-step cooking guide',
+      'Save favourite recipes',
+      'Unlimited personal recipes',
+      'Shopping list generator',
+      'Recipe categories & tags',
+      'Recipe sharing',
+    ],
     highlight: false,
   },
   {
     id: 'annual',
     name: 'Annual',
-    price: 'R199',
+    price: 'R250',
     period: '/year',
-    note: 'Once-off payment · save R41 vs 12-month',
-    features: ['15 built-in recipes', 'Ingredient-based matching', 'Step-by-step cooking guide', 'Personal recipe repository', 'Recipe sharing'],
-    cta: 'Get best value',
+    note: 'Once-off payment · save 31% vs 12-month',
+    features: [
+      'All 15 built-in recipes',
+      'Ingredient-based matching',
+      'Step-by-step cooking guide',
+      'Save favourite recipes',
+      'Unlimited personal recipes',
+      'Shopping list generator',
+      'Recipe categories & tags',
+      'Recipe sharing',
+    ],
     highlight: true,
     badge: 'Best value',
   },
 ];
 
-export default function Pricing({ user, onPlanSelected }) {
+export default function Pricing({ user, onPlanSelected, trialExpired }) {
   const [loading, setLoading] = useState(null);
   const [error, setError] = useState('');
 
@@ -55,14 +83,30 @@ export default function Pricing({ user, onPlanSelected }) {
     setError('');
 
     if (plan.id === 'free') {
-      const { error } = await supabase
+      const { error: err } = await supabase
         .from('subscriptions')
-        .insert({ user_id: user.id, plan: 'free', status: 'active' });
-      if (error) { setError('Something went wrong. Please try again.'); setLoading(null); return; }
-      onPlanSelected('free');
+        .upsert({ user_id: user.id, plan: 'free', status: 'active' }, { onConflict: 'user_id' });
+      if (err) { setError('Something went wrong. Please try again.'); setLoading(null); return; }
+      onPlanSelected();
       return;
     }
 
+    // Start 7-day free trial (first time only)
+    if (!trialExpired) {
+      const trialEnd = new Date();
+      trialEnd.setDate(trialEnd.getDate() + 7);
+      const { error: err } = await supabase
+        .from('subscriptions')
+        .upsert(
+          { user_id: user.id, plan: plan.id, status: 'trial', trial_ends_at: trialEnd.toISOString() },
+          { onConflict: 'user_id' }
+        );
+      if (err) { setError('Something went wrong. Please try again.'); setLoading(null); return; }
+      onPlanSelected();
+      return;
+    }
+
+    // Trial expired — go to PayFast
     try {
       const res = await fetch('/.netlify/functions/create-payment', {
         method: 'POST',
@@ -75,9 +119,9 @@ export default function Pricing({ user, onPlanSelected }) {
       form.method = 'POST';
       form.action = formUrl;
       Object.entries(fields).forEach(([k, v]) => {
-        const input = document.createElement('input');
-        input.type = 'hidden'; input.name = k; input.value = v;
-        form.appendChild(input);
+        const inp = document.createElement('input');
+        inp.type = 'hidden'; inp.name = k; inp.value = v;
+        form.appendChild(inp);
       });
       document.body.appendChild(form);
       form.submit();
@@ -85,6 +129,13 @@ export default function Pricing({ user, onPlanSelected }) {
       setError('Unable to set up payment. Please try again.');
       setLoading(null);
     }
+  };
+
+  const ctaLabel = (plan) => {
+    if (loading === plan.id) return 'Please wait…';
+    if (plan.id === 'free') return 'Get started free';
+    if (trialExpired) return `Activate ${plan.name} plan`;
+    return 'Start 7-day free trial';
   };
 
   return (
@@ -96,7 +147,13 @@ export default function Pricing({ user, onPlanSelected }) {
             <ChefHat size={24} />
           </div>
           <h1 className="text-3xl font-serif font-bold text-stone-800">Choose your plan</h1>
-          <p className="text-stone-500 mt-2 text-sm">Paid plans unlock your personal recipe repository and recipe sharing.</p>
+          {trialExpired ? (
+            <p className="text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mt-4 text-sm max-w-md mx-auto">
+              Your 7-day free trial has ended. Choose a plan below to continue using Food Finder.
+            </p>
+          ) : (
+            <p className="text-stone-500 mt-2 text-sm">Paid plans include a 7-day free trial. No payment required to start.</p>
+          )}
         </div>
 
         {error && <p className="text-center text-red-500 mb-6 text-sm">{error}</p>}
@@ -148,14 +205,16 @@ export default function Pricing({ user, onPlanSelected }) {
                     : 'bg-yellow-400 text-stone-800 hover:bg-yellow-500'
                 }`}
               >
-                {loading === plan.id ? 'Please wait…' : plan.cta}
+                {ctaLabel(plan)}
               </button>
             </div>
           ))}
         </div>
 
         <p className="text-center text-xs text-stone-400 mt-6">
-          Secure payments processed by PayFast · Manage or cancel your plan anytime
+          {trialExpired
+            ? 'Secure payments processed by PayFast · Cancel anytime'
+            : 'Paid plans include a 7-day free trial · Secure payments by PayFast · Cancel anytime'}
         </p>
       </div>
     </div>
