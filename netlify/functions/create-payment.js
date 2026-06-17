@@ -35,15 +35,15 @@ exports.handler = async (event) => {
   if (!config) return { statusCode: 400, body: 'Invalid plan' };
 
   const sandbox = process.env.PAYFAST_SANDBOX === 'true';
-  const baseUrl = process.env.URL || 'https://pantrytoplate-za.netlify.app';
+  const baseUrl = process.env.URL || 'https://pantrytoplate.co.za';
   const nameParts = (name || '').split(' ');
 
   const params = {
     merchant_id: process.env.PAYFAST_MERCHANT_ID,
     merchant_key: process.env.PAYFAST_MERCHANT_KEY,
-    return_url: `${baseUrl}?payment=success&plan=${plan}`,
-    cancel_url: `${baseUrl}?payment=cancelled`,
-    notify_url: `${baseUrl}/.netlify/functions/payfast-notify`,
+    return_url: `${baseUrl}/app/payment/return`,
+    cancel_url: `${baseUrl}/app/payment/cancel`,
+    notify_url: `${baseUrl}/app/payment/notify`,
     name_first: nameParts[0] || '',
     name_last: nameParts.slice(1).join(' ') || '',
     email_address: email,

@@ -14,7 +14,10 @@ export default function App() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('payment') === 'success') window.history.replaceState({}, '', '/');
+    const path = window.location.pathname;
+    if (path.startsWith('/app/payment/') || params.get('payment') === 'success') {
+      window.history.replaceState({}, '', '/app');
+    }
   }, []);
 
   useEffect(() => {
