@@ -63,7 +63,20 @@ exports.handler = async (event) => {
     params.cycles = String(config.cycles);
   }
 
-  params.signature = generateSignature(params, process.env.PAYFAST_PASSPHRASE);
+  const passphrase = process.env.PAYFAST_PASSPHRASE || '';
+  params.signature = generateSignature(params, passphrase);
+
+  // Temporary debug logging — remove before going live
+  const pfString = Object.keys(params)
+    .filter(k => k !== 'signature')
+    .sort()
+    .filter(k => params[k] !== '' && params[k] != null)
+    .map(k => `${k}=${encodeURIComponent(String(params[k])).replace(/%20/g, '+')}`)
+    .join('&');
+  console.log('[PayFast Debug] merchant_id:', params.merchant_id);
+  console.log('[PayFast Debug] passphrase set:', passphrase ? `YES (${passphrase.length} chars)` : 'NO');
+  console.log('[PayFast Debug] pfString:', pfString);
+  console.log('[PayFast Debug] signature:', params.signature);
 
   return {
     statusCode: 200,
