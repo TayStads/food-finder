@@ -16,14 +16,26 @@ const PLAN_CONFIG = {
   },
 };
 
+// Match PHP's urlencode() which PayFast uses server-side for signature verification.
+// encodeURIComponent does not encode !, ~, *, (, ) but PHP urlencode does.
+function phpUrlencode(str) {
+  return encodeURIComponent(str)
+    .replace(/!/g, '%21')
+    .replace(/~/g, '%7E')
+    .replace(/\*/g, '%2A')
+    .replace(/\(/g, '%28')
+    .replace(/\)/g, '%29')
+    .replace(/%20/g, '+');
+}
+
 function generateSignature(params, passphrase) {
   const pfString = Object.keys(params)
     .sort()
     .filter(k => params[k] !== '' && params[k] != null)
-    .map(k => `${k}=${encodeURIComponent(String(params[k])).replace(/%20/g, '+')}`)
+    .map(k => `${k}=${phpUrlencode(String(params[k]))}`)
     .join('&');
 
-  const toHash = passphrase ? `${pfString}&passphrase=${encodeURIComponent(passphrase).replace(/%20/g, '+')}` : pfString;
+  const toHash = passphrase ? `${pfString}&passphrase=${phpUrlencode(passphrase)}` : pfString;
   return crypto.createHash('md5').update(toHash).digest('hex');
 }
 
@@ -71,19 +83,24 @@ exports.handler = async (event) => {
     .filter(k => k !== 'signature')
     .sort()
     .filter(k => params[k] !== '' && params[k] != null)
-    .map(k => `${k}=${encodeURIComponent(String(params[k])).replace(/%20/g, '+')}`)
+    .map(k => `${k}=${phpUrlencode(String(params[k]))}`)
     .join('&');
   console.log('[PayFast Debug] merchant_id:', params.merchant_id);
   console.log('[PayFast Debug] passphrase set:', passphrase ? `YES (${passphrase.length} chars)` : 'NO');
   console.log('[PayFast Debug] pfString:', pfString);
   console.log('[PayFast Debug] signature:', params.signature);
 
+  // Only send fields that were included in the signature (no empty strings).
+  const fields = Object.fromEntries(
+    Object.entries(params).filter(([, v]) => v !== '' && v != null)
+  );
+
   return {
     statusCode: 200,
     headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
     body: JSON.stringify({
       formUrl: sandbox ? 'https://sandbox.payfast.co.za/eng/process' : 'https://www.payfast.co.za/eng/process',
-      fields: params,
+      fields,
     }),
   };
 };

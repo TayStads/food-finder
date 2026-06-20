@@ -6,14 +6,24 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
+function phpUrlencode(str) {
+  return encodeURIComponent(str)
+    .replace(/!/g, '%21')
+    .replace(/~/g, '%7E')
+    .replace(/\*/g, '%2A')
+    .replace(/\(/g, '%28')
+    .replace(/\)/g, '%29')
+    .replace(/%20/g, '+');
+}
+
 function validateSignature(params, passphrase) {
   const { signature, ...rest } = params;
   const pfString = Object.keys(rest)
     .sort()
     .filter(k => rest[k] !== '' && rest[k] != null)
-    .map(k => `${k}=${encodeURIComponent(String(rest[k])).replace(/%20/g, '+')}`)
+    .map(k => `${k}=${phpUrlencode(String(rest[k]))}`)
     .join('&');
-  const toHash = passphrase ? `${pfString}&passphrase=${encodeURIComponent(passphrase).replace(/%20/g, '+')}` : pfString;
+  const toHash = passphrase ? `${pfString}&passphrase=${phpUrlencode(passphrase)}` : pfString;
   return crypto.createHash('md5').update(toHash).digest('hex') === signature;
 }
 
