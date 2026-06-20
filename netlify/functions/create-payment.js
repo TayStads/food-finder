@@ -29,8 +29,9 @@ function phpUrlencode(str) {
 }
 
 function generateSignature(params, passphrase) {
+  // No sort — PayFast validates form submissions in the order fields are received,
+  // which must match the insertion order we use when building the form.
   const pfString = Object.keys(params)
-    .sort()
     .filter(k => params[k] !== '' && params[k] != null)
     .map(k => `${k}=${phpUrlencode(String(params[k]))}`)
     .join('&');
@@ -81,7 +82,6 @@ exports.handler = async (event) => {
   // Temporary debug logging — remove before going live
   const pfString = Object.keys(params)
     .filter(k => k !== 'signature')
-    .sort()
     .filter(k => params[k] !== '' && params[k] != null)
     .map(k => `${k}=${phpUrlencode(String(params[k]))}`)
     .join('&');
